@@ -3,7 +3,7 @@ import random
 import re
 import requests
 from collections import deque
-from cpu2 import CPU
+from cpu import CPU
 from datetime import datetime
 from hashlib import sha256
 
@@ -540,7 +540,7 @@ class GamePlayer:
         self.encumbrance = int(response['encumbrance'])
         self.status_ = response['status']
         self.gold = response['gold']
-        self.snitches = response['snitches']
+        # self.snitches = response['snitches']
         # Ensure timely sale of items by lowering sale threshold as item weight increases.
         # We won't wander forever looking for that one tiny treasure we need to trigger sale.
         if self.items_:
@@ -556,7 +556,7 @@ class GamePlayer:
     def change_name(self) -> dict:
         """Ask the name changing pirate to change your name."""
         suffix = 'api/adv/change_name/'
-        data = {"name": "paulus", "confirm": "aye"}
+        data = {"name": "loodi", "confirm": "aye"}
         response = self.make_request(suffix=suffix, data=data, header=self.auth, http='post')
         return response
 
