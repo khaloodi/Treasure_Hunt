@@ -6,7 +6,7 @@ from support import *
 
 # Setup in case Treasure Hunt Section is skipped
 data = get_init()
-map = file_to_json('map.txt')
+map = file_to_json('full_map.txt')
 sleep(1)
 
 # Treasure Hunt

@@ -207,8 +207,7 @@ def treasure_hunt():
             rooms[data['room_id']][reverse[move]] = current_room_id
         else:
             move = backtrack.pop(-1)
-            data = make_move({'direction': move,
-                                'next_room_id': str(map[str(current_room_id)][move])})
+            data = make_move({'direction': move, 'next_room_id': str(map[str(current_room_id)][move])})
 
         sleep(data['cooldown']+1)
         inventory = get_status()['inventory']
