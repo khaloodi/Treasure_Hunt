@@ -18,7 +18,7 @@ print('Treasure Hunt Complete')
 
 # Name Change
 data = move_to_location(data['room_id'], KEY_ROOMS["Pirate Ry's"], data, map)
-data = change_name('Khaled>')  # Parameter should be your name in quotes
+data = change_name('Khaled')  # Parameter should be your name in quotes
 print('Name Change Complete')
 
 # Finding Mine Location

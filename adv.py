@@ -167,6 +167,7 @@ def acquire_powers():
 
 player = Player()
 # get_name("Madera")   # to my teammates... change this.
+get_name('Khaled')
 
 
 if __name__ == '__main__':
