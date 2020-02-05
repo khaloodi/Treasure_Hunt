@@ -4,7 +4,6 @@ import random
 import time
 
 from player import Player
-
 from api import url, key, opposite, Queue
 
 
@@ -50,17 +49,25 @@ def generate_path(target):
             if target in list(player.graph[last_room].values()):
                 # >>> IF YES, RETURN PATH (excluding starting room)
                 if target != "?":
-                    final_dir = next(
-                        (k for k, v in player.graph[last_room].items() if v == target), None)
-                    p.append(final_dir)
+                    # final_dir = next(
+                    #     (k for k, v in player.graph[last_room].items() if str(v) == target), '?')
+                    # final_dir ='?'
+
+                    # for d in player.graph[last_room]:
+                    #     if player.graph[last_room][d] is target:
+                    #         final_dir=d
+                    p.append(target)
+                    print(p[1:])
+
                 return p[1:]
             # Else mark it as visited
             v.add(last_room)
             # Then add a PATH to its neighbors to the back of the queue
             for direction in player.graph[last_room]:
-                path_copy = p.copy()
-                path_copy.append(player.graph[last_room][direction])
-                q.enqueue(path_copy)
+                if player.graph[last_room][direction] != '?':
+                    path_copy = p.copy()
+                    path_copy.append(player.graph[last_room][direction])
+                    q.enqueue(path_copy)
 
 
 def travel_to_target(target='?'):
@@ -68,7 +75,8 @@ def travel_to_target(target='?'):
     Runs a BFS to specific room or to nearest room with unexplored exit,
     then moves through that path in order.
     """
-
+    if player.current_room["room_id"] == target:
+        return
     bfs_path = generate_path(target)
     print(f"new path to follow! {bfs_path}")
     while bfs_path is not None and len(bfs_path) > 0:
@@ -91,6 +99,108 @@ def explore_maze():
     print("Map complete!")
 
 
-player = Player()
 
-explore_maze()
+def get_name(name):
+
+    #Make list of treasure rooms
+    treasure_rooms = []
+    for k, v in player.map.items():
+        if "tiny treasure" in v["items"]:
+            treasure_rooms.append(k)
+    print("The following rooms have treasure:", treasure_rooms)
+
+    while player.gold < 1000: #This is automatically updated, otherwise have to check server
+        while player.encumbrance < player.strength:
+            #find room with treasure
+            # go there
+            print
+            current_treasure_room = treasure_rooms[0]
+            travel_to_target(int(current_treasure_room))
+
+            # pick up treasure
+            # while there are still items to pick up:
+            #while len(player.map[str(player.current_room["room_id"])]["items"]) > 0:
+            player.pick_up_loot("tiny treasure")
+
+            # update map entry for room to reflect taken treasure
+            player.map[current_treasure_room]["items"] = []
+            player._write_file('map.txt', player.map)
+            treasure_rooms = treasure_rooms[1:]
+
+            # If all treasure in map has been taken, go straight to shop
+            if len(treasure_rooms) < 1:
+                break
+
+        # travel to shop
+        # sell all items in inventory
+        sell_loot()
+    # travel to Pirate Ry's
+    travel_to_target(467)
+    # purchase name  
+    player.buy_name(name)
+
+def sell_loot():
+        travel_to_target(1)
+        time.sleep(player.cooldown)
+        print(player.inventory)
+        for item in player.inventory:
+            print("in for loop")
+            json = {"name": item}
+            print(json)
+            r1 = requests.post(f"{url}/api/adv/sell/", headers={'Authorization': f"Token {key}", "Content-Type": "application/json"}, json = json).json()
+            time.sleep(r1['cooldown'])
+            json['confirm'] = "yes"
+            r1_conf = requests.post(f"{url}/api/adv/sell/", headers={'Authorization': f"Token {key}", "Content-Type": "application/json"}, json = json).json()
+            print(r1_conf)
+            time.sleep(r1_conf['cooldown'])
+            player.check_self()
+
+
+def acquire_powers():
+    """
+    After maze has been generated, now go to shrines and acquire powers by praying.
+    Order of importance is flight -> dash -> everything else if ready.
+    """
+
+
+
+
+player = Player()
+# get_name("Madera")   # to my teammates... change this.
+
+
+if __name__ == '__main__':
+    print(player.current_room)
+    running = True
+    command_list = {
+        "moveTo": {"call": player.travel, "arg_count": 1},      # moveTo n
+        "buildMap": {"call": explore_maze, "arg_count": 0},
+        "travelTo": {"call": travel_to_target, "arg_count": 1}, # travelTo roomid
+        "loot": {"call": player.pick_up_loot, "arg_count": 1},  # loot 'tiny treasure'
+        "drop": {"call": player.drop_loot, "arg_count": 1},     # drop 'tiny treasure'
+        # "mine": {"call": player.mine, "arg_count": 0},
+        "sellLoot":{"call": sell_loot, "arg_count": 0},
+        "roomDetails": {"call": player.check_room, "arg_count": 0}
+    }
+
+    while running:
+        user_data = input('Enter command: ').split(' ')
+
+        cmd = user_data[0]
+        args = user_data[1:]
+
+        for i, v in enumerate(args):
+            if v.isdigit():
+                args[i] = int(v)
+
+        if cmd == 'quit':
+            running = False
+
+        elif cmd not in command_list:
+            print("That Command is not part of our command list try again.")
+
+        else:
+            if command_list[cmd]["arg_count"] == 1:
+                command_list[cmd]['call'](" ".join(args) if len(args) > 1 else args[0])
+            elif command_list[cmd]["arg_count"] == 0:
+                command_list[cmd]['call']()
